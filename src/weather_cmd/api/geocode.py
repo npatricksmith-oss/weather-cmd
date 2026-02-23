@@ -28,6 +28,23 @@ async def geocode_city(city: str, client: httpx.AsyncClient) -> Location:
     )
 
 
+async def geocode_zipcode(zipcode: str, client: httpx.AsyncClient) -> Location:
+    resp = await client.get(GEOCODING_URL, params={"postal_code": zipcode, "count": 1, "language": "en"})
+    resp.raise_for_status()
+    data = resp.json()
+    results = data.get("results")
+    if not results:
+        raise ValueError(f"Could not find location: {zipcode}")
+    r = results[0]
+    return Location(
+        name=r["name"],
+        latitude=r["latitude"],
+        longitude=r["longitude"],
+        country=r.get("country", ""),
+        admin1=r.get("admin1", ""),
+    )
+
+
 async def reverse_geocode(lat: float, lon: float, client: httpx.AsyncClient) -> Location:
     resp = await client.get(
         NOMINATIM_URL,
@@ -63,6 +80,7 @@ async def geocode_ip(client: httpx.AsyncClient) -> Location:
 async def resolve_location(
     city: str | None = None,
     coords: tuple[float, float] | None = None,
+    zipcode: str | None = None,
     client: httpx.AsyncClient | None = None,
 ) -> Location:
     own_client = client is None
@@ -71,6 +89,8 @@ async def resolve_location(
     try:
         if city:
             return await geocode_city(city, client)
+        if zipcode:
+            return await geocode_zipcode(zipcode, client)
         if coords:
             return await reverse_geocode(coords[0], coords[1], client)
         return await geocode_ip(client)

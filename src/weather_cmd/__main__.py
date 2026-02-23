@@ -29,6 +29,7 @@ def main() -> None:
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--city", type=str, help="City name (e.g. 'Denver')")
+    group.add_argument("--zipcode", type=str, help="Zip/postal code (e.g. '80202')")
     group.add_argument(
         "--location",
         type=str,
@@ -50,6 +51,7 @@ def main() -> None:
 
     config = load_config()
     city: str | None = args.city
+    zipcode: str | None = args.zipcode
     coords: tuple[float, float] | None = None
     units: str = args.units or config.get("units", "imperial")
 
@@ -60,20 +62,28 @@ def main() -> None:
         except (ValueError, IndexError):
             print("Error: --location must be LAT,LON (e.g. '39.74,-104.98')", file=sys.stderr)
             sys.exit(1)
-    elif not city:
+    elif not zipcode:
         city = config.get("city")
-        if not city and "latitude" in config and "longitude" in config:
+        zipcode = config.get("zipcode")
+        if not city and not zipcode and "latitude" in config and "longitude" in config:
             coords = (config["latitude"], config["longitude"])
 
     if args.save_location:
         if city:
             config["city"] = city
+            config.pop("zipcode", None)
+            config.pop("latitude", None)
+            config.pop("longitude", None)
+        elif zipcode:
+            config["zipcode"] = zipcode
+            config.pop("city", None)
             config.pop("latitude", None)
             config.pop("longitude", None)
         elif coords:
             config["latitude"] = coords[0]
             config["longitude"] = coords[1]
             config.pop("city", None)
+            config.pop("zipcode", None)
         if args.units:
             config["units"] = units
         save_config(config)
@@ -84,7 +94,7 @@ def main() -> None:
 
     from weather_cmd.app import WeatherApp
 
-    app = WeatherApp(city=city, coords=coords, units=units)
+    app = WeatherApp(city=city, coords=coords, zipcode=zipcode, units=units)
     app.run()
 
 

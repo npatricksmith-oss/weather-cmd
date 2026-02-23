@@ -44,12 +44,14 @@ class WeatherApp(App):
         self,
         city: str | None = None,
         coords: tuple[float, float] | None = None,
+        zipcode: str | None = None,
         units: str = "imperial",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self._city = city
         self._coords = coords
+        self._zipcode = zipcode
         self._units = units
         self._weather_data: WeatherData | None = None
         self._location: Location | None = None
@@ -117,6 +119,7 @@ class WeatherApp(App):
                     self._location = await resolve_location(
                         city=self._city,
                         coords=self._coords,
+                        zipcode=self._zipcode,
                         client=client,
                     )
 
