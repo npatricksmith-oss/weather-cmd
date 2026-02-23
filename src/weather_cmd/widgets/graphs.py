@@ -76,7 +76,7 @@ class ForecastGraphs(Widget):
         plt.clf()
         temp_rounded = [round(t) for t in hourly.temperature[:n]]
         feels_rounded = [round(f) for f in hourly.apparent_temperature[:n]]
-        plt.plot(x, temp_rounded, label=f"Temp ({unit})", color="bright_yellow")
+        plt.plot(x, temp_rounded, label=f"Temp ({unit})", color=[255, 255, 0])
         plt.plot(x, feels_rounded, label=f"Feels like ({unit})", color="orange")
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Temperature ({unit})")

@@ -27,6 +27,7 @@ CSS_PATH = Path(__file__).parent / "app.tcss"
 class WeatherApp(App):
     TITLE = "weather-cmd"
     CSS_PATH = CSS_PATH
+    ENABLE_COMMAND_PALETTE = False
 
     BINDINGS = [
         Binding("1", "tab('graphs')", "Graphs", show=True),
