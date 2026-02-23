@@ -100,6 +100,18 @@ DailyView PlotextPlot {
     margin: 0 1;
 }
 
+#detailed-label {
+    text-style: bold;
+    padding: 1 1 0 1;
+    color: $accent;
+}
+
+#detailed-forecast {
+    height: auto;
+    padding: 0 1;
+    color: $text;
+}
+
 /* Radar */
 RadarView {
     height: 1fr;

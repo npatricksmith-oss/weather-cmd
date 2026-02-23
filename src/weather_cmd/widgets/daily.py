@@ -16,11 +16,11 @@ from weather_cmd.utils.weather_codes import get_weather_description, get_weather
 class DailyView(Widget):
     def compose(self) -> ComposeResult:
         with VerticalScroll():
-            yield Label("Detailed Forecast:", id="detailed-label")
-            yield Static("", id="detailed-forecast")
             yield Label("7-Day Summary:", id="forecast-label")
             yield Static("", id="text-forecast-7day")
             yield DataTable(id="daily-table")
+            yield Label("Detailed Forecast:", id="detailed-label")
+            yield Static("", id="detailed-forecast")
             yield PlotextPlot(id="weekly-temp-plot")
             yield PlotextPlot(id="weekly-precip-plot")
 
@@ -97,15 +97,29 @@ class DailyView(Widget):
         self.query_one("#weekly-precip-plot", PlotextPlot).refresh()
 
     def _format_detailed_forecast(self, periods: list[ForecastPeriod]) -> str:
-        """Format detailed forecast periods for display."""
+        """Format detailed forecast periods for display as a table."""
         if not periods:
             return "(No detailed forecast available)"
 
         lines = []
-        for period in periods:
-            # Format as: "Period Name    Detailed forecast text..."
-            # Pad period name to 20 chars for alignment
+
+        # Add header separator
+        lines.append("─" * 120)
+
+        for i, period in enumerate(periods):
+            # Period name column (20 chars wide, bold)
             name = period.name.ljust(20)
-            lines.append(f"{name} {period.detailed_forecast}")
+            # Detailed forecast (fill the rest of the line)
+            forecast = period.detailed_forecast
+
+            # Format: Bold period name followed by forecast text
+            lines.append(f"  {name}  {forecast}")
+
+            # Add separator between periods
+            if i < len(periods) - 1:
+                lines.append("─" * 120)
+
+        # Add footer separator
+        lines.append("─" * 120)
 
         return "\n".join(lines)
