@@ -81,7 +81,13 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Temperature ({unit})")
         plt.ylabel(f"({unit})")
-        plt.yfrequency(max(1, len(set(temp_rounded + feels_rounded)) // 5))
+        # Set y-axis ticks with integer formatting
+        all_temps = temp_rounded + feels_rounded
+        if all_temps:
+            ymin, ymax = int(min(all_temps)), int(max(all_temps))
+            step = max(1, (ymax - ymin) // 5)
+            yticks = list(range(ymin, ymax + 1, step))
+            plt.yticks(yticks, [str(int(y)) for y in yticks])
         self.query_one("#temp-plot", PlotextPlot).refresh()
 
     def _draw_precip_prob(self, x, hourly, n, xt_pos, xt_lbl):
@@ -109,6 +115,12 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Precipitation Amount ({unit})")
         plt.ylabel(f"({unit})")
+        # Set y-axis ticks with 2 decimal formatting
+        if precip_rounded:
+            ymax = max(precip_rounded)
+            step = max(0.01, ymax / 5) if ymax > 0 else 0.01
+            yticks = [round(i * step, 2) for i in range(int(ymax / step) + 2)]
+            plt.yticks(yticks, [f"{y:.2f}" for y in yticks])
         self.query_one("#precip-amount-plot", PlotextPlot).refresh()
 
     def _draw_humidity(self, x, hourly, n, xt_pos, xt_lbl):
@@ -136,6 +148,12 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Snowfall ({unit})")
         plt.ylabel(f"({unit})")
+        # Set y-axis ticks with 2 decimal formatting
+        if snow_rounded:
+            ymax = max(snow_rounded)
+            step = max(0.01, ymax / 5) if ymax > 0 else 0.01
+            yticks = [round(i * step, 2) for i in range(int(ymax / step) + 2)]
+            plt.yticks(yticks, [f"{y:.2f}" for y in yticks])
         self.query_one("#snow-plot", PlotextPlot).refresh()
 
     def _draw_wind(self, x, hourly, n, xt_pos, xt_lbl, unit):
@@ -148,6 +166,13 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Wind Speed ({unit})")
         plt.ylabel(f"({unit})")
+        # Set y-axis ticks with integer formatting
+        all_winds = speed_rounded + gusts_rounded
+        if all_winds:
+            ymin, ymax = int(min(all_winds)), int(max(all_winds))
+            step = max(1, (ymax - ymin) // 5)
+            yticks = list(range(ymin, ymax + 1, step))
+            plt.yticks(yticks, [str(int(y)) for y in yticks])
         self.query_one("#wind-plot", PlotextPlot).refresh()
 
     def _draw_cloud(self, x, hourly, n, xt_pos, xt_lbl):
