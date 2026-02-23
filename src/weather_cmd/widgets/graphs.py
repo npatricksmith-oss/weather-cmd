@@ -76,11 +76,12 @@ class ForecastGraphs(Widget):
         plt.clf()
         temp_rounded = [round(t) for t in hourly.temperature[:n]]
         feels_rounded = [round(f) for f in hourly.apparent_temperature[:n]]
-        plt.plot(x, temp_rounded, label=f"Temp ({unit})", color="yellow")
+        plt.plot(x, temp_rounded, label=f"Temp ({unit})", color="bright_yellow")
         plt.plot(x, feels_rounded, label=f"Feels like ({unit})", color="orange")
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Temperature ({unit})")
         plt.ylabel(f"({unit})")
+        plt.ydigits(0)
         plt.yfrequency(max(1, len(set(temp_rounded + feels_rounded)) // 5))
         self.query_one("#temp-plot", PlotextPlot).refresh()
 
@@ -88,11 +89,12 @@ class ForecastGraphs(Widget):
         plt = self.query_one("#precip-prob-plot", PlotextPlot).plt
         plt.clf()
         precip_rounded = [round(p) for p in hourly.precipitation_probability[:n]]
-        plt.plot(x, precip_rounded, color="blue")
+        plt.plot(x, precip_rounded, color="bright_blue")
         plt.xticks(xt_pos, xt_lbl)
         plt.ylim(0, 100)
         plt.title("Precipitation Probability %")
         plt.ylabel("%")
+        plt.ydigits(0)
         plt.yfrequency(11)
         self.query_one("#precip-prob-plot", PlotextPlot).refresh()
 
@@ -105,21 +107,23 @@ class ForecastGraphs(Widget):
             precip_data = [p / 25.4 for p in precip_data]
         # Round to 2 decimals for precipitation
         precip_rounded = [round(p, 2) for p in precip_data]
-        plt.bar(x, precip_rounded, color="blue", width=0.8)
+        plt.bar(x, precip_rounded, color="bright_blue", width=0.8)
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Precipitation Amount ({unit})")
         plt.ylabel(f"({unit})")
+        plt.ydigits(2)
         self.query_one("#precip-amount-plot", PlotextPlot).refresh()
 
     def _draw_humidity(self, x, hourly, n, xt_pos, xt_lbl):
         plt = self.query_one("#humidity-plot", PlotextPlot).plt
         plt.clf()
         humidity_rounded = [round(h) for h in hourly.humidity[:n]]
-        plt.plot(x, humidity_rounded, color="green")
+        plt.plot(x, humidity_rounded, color="bright_green")
         plt.xticks(xt_pos, xt_lbl)
         plt.ylim(0, 100)
         plt.title("Humidity %")
         plt.ylabel("%")
+        plt.ydigits(0)
         plt.yfrequency(11)
         self.query_one("#humidity-plot", PlotextPlot).refresh()
 
@@ -136,6 +140,7 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Snowfall ({unit})")
         plt.ylabel(f"({unit})")
+        plt.ydigits(2)
         self.query_one("#snow-plot", PlotextPlot).refresh()
 
     def _draw_wind(self, x, hourly, n, xt_pos, xt_lbl, unit):
@@ -143,11 +148,12 @@ class ForecastGraphs(Widget):
         plt.clf()
         speed_rounded = [round(s) for s in hourly.wind_speed[:n]]
         gusts_rounded = [round(g) for g in hourly.wind_gusts[:n]]
-        plt.plot(x, speed_rounded, label=f"Speed ({unit})", color="blue")
-        plt.plot(x, gusts_rounded, label=f"Gusts ({unit})", color="cyan")
+        plt.plot(x, speed_rounded, label=f"Speed ({unit})", color="bright_blue")
+        plt.plot(x, gusts_rounded, label=f"Gusts ({unit})", color="bright_cyan")
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Wind Speed ({unit})")
         plt.ylabel(f"({unit})")
+        plt.ydigits(0)
         self.query_one("#wind-plot", PlotextPlot).refresh()
 
     def _draw_cloud(self, x, hourly, n, xt_pos, xt_lbl):
@@ -159,5 +165,6 @@ class ForecastGraphs(Widget):
         plt.ylim(0, 100)
         plt.title("Cloud Cover %")
         plt.ylabel("%")
+        plt.ydigits(0)
         plt.yfrequency(11)
         self.query_one("#cloud-plot", PlotextPlot).refresh()
