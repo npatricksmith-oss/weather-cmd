@@ -61,6 +61,7 @@ class Dashboard(Widget):
                 yield Label("", id="detail-high-low")
                 yield Label("", id="detail-sunrise")
                 yield Label("", id="detail-sunset")
+                yield Label("", id="detail-county")
         yield Label("Daily Forecast:", id="forecast-label")
         yield Static("", id="text-forecast")
 
@@ -96,6 +97,12 @@ class Dashboard(Widget):
                 self.query_one("#detail-sunrise", Label).update(f"Sunrise: {daily.sunrise[0][-5:]}")
             if daily.sunset:
                 self.query_one("#detail-sunset", Label).update(f"Sunset: {daily.sunset[0][-5:]}")
+
+        # Update county forecast
+        if data.county:
+            self.query_one("#detail-county", Label).update(f"County: {data.county}")
+        else:
+            self.query_one("#detail-county", Label).update("")
 
         # Update text forecast
         if data.text_forecast:

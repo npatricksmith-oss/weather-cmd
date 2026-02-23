@@ -23,6 +23,7 @@ class ForecastGraphs(Widget):
         with VerticalScroll():
             yield PlotextPlot(id="temp-plot")
             yield PlotextPlot(id="precip-prob-plot")
+            yield PlotextPlot(id="precip-amount-plot")
             yield PlotextPlot(id="humidity-plot")
             yield PlotextPlot(id="snow-plot")
             yield PlotextPlot(id="wind-plot")
@@ -59,11 +60,14 @@ class ForecastGraphs(Widget):
 
         temp_unit = "\u00b0F" if units == "imperial" else "\u00b0C"
         wind_unit = "mph" if units == "imperial" else "km/h"
+        precip_unit = "in" if units == "imperial" else "mm"
+        snow_unit = "in" if units == "imperial" else "cm"
 
         self._draw_temperature(x, hourly, n, xticks_pos, xticks_labels, temp_unit)
         self._draw_precip_prob(x, hourly, n, xticks_pos, xticks_labels)
+        self._draw_precip_amount(x, hourly, n, xticks_pos, xticks_labels, precip_unit, units)
         self._draw_humidity(x, hourly, n, xticks_pos, xticks_labels)
-        self._draw_snowfall(x, hourly, n, xticks_pos, xticks_labels)
+        self._draw_snowfall(x, hourly, n, xticks_pos, xticks_labels, snow_unit, units)
         self._draw_wind(x, hourly, n, xticks_pos, xticks_labels, wind_unit)
         self._draw_cloud(x, hourly, n, xticks_pos, xticks_labels)
 
@@ -75,8 +79,9 @@ class ForecastGraphs(Widget):
         plt.plot(x, temp_rounded, label=f"Temp ({unit})", color="yellow")
         plt.plot(x, feels_rounded, label=f"Feels like ({unit})", color="orange")
         plt.xticks(xt_pos, xt_lbl)
-        plt.title(f"Temperature ({unit})")
+        plt.title(f"Temperature {unit}")
         plt.ylabel(unit)
+        plt.yfrequency(max(1, len(set(temp_rounded + feels_rounded)) // 5))
         self.query_one("#temp-plot", PlotextPlot).refresh()
 
     def _draw_precip_prob(self, x, hourly, n, xt_pos, xt_lbl):
@@ -86,9 +91,25 @@ class ForecastGraphs(Widget):
         plt.plot(x, precip_rounded, color="blue")
         plt.xticks(xt_pos, xt_lbl)
         plt.ylim(0, 100)
-        plt.title("Precipitation Probability (%)")
+        plt.title("Precipitation Probability %")
         plt.ylabel("%")
+        plt.yfrequency(11)
         self.query_one("#precip-prob-plot", PlotextPlot).refresh()
+
+    def _draw_precip_amount(self, x, hourly, n, xt_pos, xt_lbl, unit, units):
+        plt = self.query_one("#precip-amount-plot", PlotextPlot).plt
+        plt.clf()
+        precip_data = hourly.precipitation[:n]
+        # Convert to imperial if needed
+        if units == "imperial":
+            precip_data = [p / 25.4 for p in precip_data]
+        # Round to 2 decimals for precipitation
+        precip_rounded = [round(p, 2) for p in precip_data]
+        plt.bar(x, precip_rounded, color="blue", width=0.8)
+        plt.xticks(xt_pos, xt_lbl)
+        plt.title(f"Precipitation Amount {unit}")
+        plt.ylabel(unit)
+        self.query_one("#precip-amount-plot", PlotextPlot).refresh()
 
     def _draw_humidity(self, x, hourly, n, xt_pos, xt_lbl):
         plt = self.query_one("#humidity-plot", PlotextPlot).plt
@@ -97,18 +118,24 @@ class ForecastGraphs(Widget):
         plt.plot(x, humidity_rounded, color="green")
         plt.xticks(xt_pos, xt_lbl)
         plt.ylim(0, 100)
-        plt.title("Humidity (%)")
+        plt.title("Humidity %")
         plt.ylabel("%")
+        plt.yfrequency(11)
         self.query_one("#humidity-plot", PlotextPlot).refresh()
 
-    def _draw_snowfall(self, x, hourly, n, xt_pos, xt_lbl):
+    def _draw_snowfall(self, x, hourly, n, xt_pos, xt_lbl, unit, units):
         plt = self.query_one("#snow-plot", PlotextPlot).plt
         plt.clf()
-        snow_rounded = [round(s, 2) for s in hourly.snowfall[:n]]
+        snow_data = hourly.snowfall[:n]
+        # Convert to imperial if needed
+        if units == "imperial":
+            snow_data = [s / 2.54 for s in snow_data]
+        # Round to 2 decimals for snowfall
+        snow_rounded = [round(s, 2) for s in snow_data]
         plt.bar(x, snow_rounded, color="white", width=0.8)
         plt.xticks(xt_pos, xt_lbl)
-        plt.title("Snowfall (cm)")
-        plt.ylabel("cm")
+        plt.title(f"Snowfall {unit}")
+        plt.ylabel(unit)
         self.query_one("#snow-plot", PlotextPlot).refresh()
 
     def _draw_wind(self, x, hourly, n, xt_pos, xt_lbl, unit):
@@ -119,7 +146,7 @@ class ForecastGraphs(Widget):
         plt.plot(x, speed_rounded, label=f"Speed ({unit})", color="blue")
         plt.plot(x, gusts_rounded, label=f"Gusts ({unit})", color="cyan")
         plt.xticks(xt_pos, xt_lbl)
-        plt.title(f"Wind Speed ({unit})")
+        plt.title(f"Wind Speed {unit}")
         plt.ylabel(unit)
         self.query_one("#wind-plot", PlotextPlot).refresh()
 
@@ -130,6 +157,7 @@ class ForecastGraphs(Widget):
         plt.plot(x, cloud_rounded, color=[150, 150, 150], fillx=True)
         plt.xticks(xt_pos, xt_lbl)
         plt.ylim(0, 100)
-        plt.title("Cloud Cover (%)")
+        plt.title("Cloud Cover %")
         plt.ylabel("%")
+        plt.yfrequency(11)
         self.query_one("#cloud-plot", PlotextPlot).refresh()

@@ -47,6 +47,33 @@ async def fetch_alerts(lat: float, lon: float, client: httpx.AsyncClient) -> lis
     return alerts
 
 
+async def fetch_county(lat: float, lon: float, client: httpx.AsyncClient) -> str:
+    """Fetch county name from NOAA Points API."""
+    try:
+        points_resp = await client.get(
+            f"{POINTS_URL}/{lat:.4f},{lon:.4f}",
+            headers=HEADERS,
+            timeout=10.0,
+        )
+        if points_resp.status_code in (404, 400):
+            return ""
+        points_resp.raise_for_status()
+        points_data = points_resp.json()
+
+        # Extract county from properties
+        county = points_data.get("properties", {}).get("county", "")
+        if county:
+            # County is returned as a URL, extract name from it
+            # e.g., "https://api.weather.gov/zones/county/NYZ013" -> "NYZ013"
+            # But we want the friendly name, which isn't in points API
+            # Return just the URL for now, or parse it
+            return county.split("/")[-1] if "/" in county else county
+
+        return ""
+    except (httpx.HTTPError, httpx.TimeoutException, KeyError):
+        return ""
+
+
 async def fetch_text_forecast(lat: float, lon: float, client: httpx.AsyncClient) -> str:
     """Fetch daily text forecast from NOAA Points API."""
     try:

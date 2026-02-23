@@ -86,5 +86,6 @@ class WeatherData:
     daily: DailyForecast
     alerts: list[NOAAAlert] = field(default_factory=list)
     text_forecast: str = ""
+    county: str = ""
     radar_image: bytes | None = None
     fetched_at: datetime = field(default_factory=datetime.now)

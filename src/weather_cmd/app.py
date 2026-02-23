@@ -11,7 +11,7 @@ from textual.binding import Binding
 from textual.widgets import Footer, Header, Label, LoadingIndicator, TabbedContent, TabPane
 
 from weather_cmd.api.geocode import resolve_location
-from weather_cmd.api.noaa import fetch_alerts, fetch_text_forecast
+from weather_cmd.api.noaa import fetch_alerts, fetch_county, fetch_text_forecast
 from weather_cmd.api.openmeteo import fetch_forecast
 from weather_cmd.api.rainviewer import fetch_radar
 from weather_cmd.models import Location, WeatherData
@@ -131,6 +131,7 @@ class WeatherApp(App):
                 )
                 alerts = await fetch_alerts(loc.latitude, loc.longitude, client)
                 text_forecast = await fetch_text_forecast(loc.latitude, loc.longitude, client)
+                county = await fetch_county(loc.latitude, loc.longitude, client)
 
                 radar_image: bytes | None = None
                 try:
@@ -145,6 +146,7 @@ class WeatherApp(App):
                     daily=daily,
                     alerts=alerts,
                     text_forecast=text_forecast,
+                    county=county,
                     radar_image=radar_image,
                 )
 

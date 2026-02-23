@@ -16,11 +16,11 @@ from weather_cmd.utils.weather_codes import get_weather_description, get_weather
 class DailyView(Widget):
     def compose(self) -> ComposeResult:
         with VerticalScroll():
+            yield Label("7-Day Forecast:", id="forecast-label")
+            yield Static("", id="text-forecast-7day")
             yield DataTable(id="daily-table")
             yield PlotextPlot(id="weekly-temp-plot")
             yield PlotextPlot(id="weekly-precip-plot")
-            yield Label("7-Day Forecast:", id="forecast-label")
-            yield Static("", id="text-forecast-7day")
 
     def on_mount(self) -> None:
         table = self.query_one("#daily-table", DataTable)
