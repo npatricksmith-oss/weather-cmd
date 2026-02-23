@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import httpx
 
-from weather_cmd.models import NOAAAlert
+from weather_cmd.models import ForecastPeriod, NOAAAlert
 
 ALERTS_URL = "https://api.weather.gov/alerts/active"
 POINTS_URL = "https://api.weather.gov/points"
@@ -111,3 +111,47 @@ async def fetch_text_forecast(lat: float, lon: float, client: httpx.AsyncClient)
         return ""
     except (httpx.HTTPError, httpx.TimeoutException, KeyError, IndexError):
         return ""
+
+
+async def fetch_detailed_forecast(lat: float, lon: float, client: httpx.AsyncClient) -> list[ForecastPeriod]:
+    """Fetch all detailed forecast periods from NOAA Points API."""
+    try:
+        # Get grid point info which contains forecast URL
+        points_resp = await client.get(
+            f"{POINTS_URL}/{lat:.4f},{lon:.4f}",
+            headers=HEADERS,
+            timeout=10.0,
+        )
+        if points_resp.status_code in (404, 400):
+            return []
+        points_resp.raise_for_status()
+        points_data = points_resp.json()
+
+        # Get forecast URL from properties
+        forecast_url = points_data.get("properties", {}).get("forecast")
+        if not forecast_url:
+            return []
+
+        # Fetch the actual forecast
+        forecast_resp = await client.get(
+            forecast_url,
+            headers=HEADERS,
+            timeout=10.0,
+        )
+        forecast_resp.raise_for_status()
+        forecast_data = forecast_resp.json()
+
+        # Extract all forecast periods
+        periods = forecast_data.get("properties", {}).get("periods", [])
+        detailed_forecasts = []
+        for period in periods:
+            detailed_forecasts.append(
+                ForecastPeriod(
+                    name=period.get("name", ""),
+                    detailed_forecast=period.get("detailedForecast", ""),
+                )
+            )
+
+        return detailed_forecasts
+    except (httpx.HTTPError, httpx.TimeoutException, KeyError, IndexError):
+        return []

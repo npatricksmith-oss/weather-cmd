@@ -79,6 +79,12 @@ class NOAAAlert:
 
 
 @dataclass
+class ForecastPeriod:
+    name: str
+    detailed_forecast: str
+
+
+@dataclass
 class WeatherData:
     location: Location
     current: CurrentConditions
@@ -87,5 +93,6 @@ class WeatherData:
     alerts: list[NOAAAlert] = field(default_factory=list)
     text_forecast: str = ""
     county: str = ""
+    detailed_forecast: list[ForecastPeriod] = field(default_factory=list)
     radar_image: bytes | None = None
     fetched_at: datetime = field(default_factory=datetime.now)

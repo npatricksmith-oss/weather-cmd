@@ -8,7 +8,7 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Label, Static
 from textual_plotext import PlotextPlot
 
-from weather_cmd.models import DailyForecast, WeatherData
+from weather_cmd.models import DailyForecast, ForecastPeriod, WeatherData
 from weather_cmd.utils.formatting import fmt_percent, fmt_precip, fmt_snow, fmt_temp
 from weather_cmd.utils.weather_codes import get_weather_description, get_weather_emoji
 
@@ -16,7 +16,9 @@ from weather_cmd.utils.weather_codes import get_weather_description, get_weather
 class DailyView(Widget):
     def compose(self) -> ComposeResult:
         with VerticalScroll():
-            yield Label("7-Day Forecast:", id="forecast-label")
+            yield Label("Detailed Forecast:", id="detailed-label")
+            yield Static("", id="detailed-forecast")
+            yield Label("7-Day Summary:", id="forecast-label")
             yield Static("", id="text-forecast-7day")
             yield DataTable(id="daily-table")
             yield PlotextPlot(id="weekly-temp-plot")
@@ -30,6 +32,10 @@ class DailyView(Widget):
         daily = data.daily
         table = self.query_one("#daily-table", DataTable)
         table.clear()
+
+        # Update detailed forecast
+        detailed_text = self._format_detailed_forecast(data.detailed_forecast)
+        self.query_one("#detailed-forecast", Static).update(detailed_text)
 
         day_labels = []
         for i, dt in enumerate(daily.dates):
@@ -89,3 +95,17 @@ class DailyView(Widget):
         plt.title(title)
         plt.ylabel(unit_label)
         self.query_one("#weekly-precip-plot", PlotextPlot).refresh()
+
+    def _format_detailed_forecast(self, periods: list[ForecastPeriod]) -> str:
+        """Format detailed forecast periods for display."""
+        if not periods:
+            return "(No detailed forecast available)"
+
+        lines = []
+        for period in periods:
+            # Format as: "Period Name    Detailed forecast text..."
+            # Pad period name to 20 chars for alignment
+            name = period.name.ljust(20)
+            lines.append(f"{name} {period.detailed_forecast}")
+
+        return "\n".join(lines)
