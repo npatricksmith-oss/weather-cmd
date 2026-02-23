@@ -81,7 +81,6 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Temperature ({unit})")
         plt.ylabel(f"({unit})")
-        plt.ydigits(0)
         plt.yfrequency(max(1, len(set(temp_rounded + feels_rounded)) // 5))
         self.query_one("#temp-plot", PlotextPlot).refresh()
 
@@ -94,7 +93,6 @@ class ForecastGraphs(Widget):
         plt.ylim(0, 100)
         plt.title("Precipitation Probability %")
         plt.ylabel("%")
-        plt.ydigits(0)
         plt.yfrequency(11)
         self.query_one("#precip-prob-plot", PlotextPlot).refresh()
 
@@ -111,7 +109,6 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Precipitation Amount ({unit})")
         plt.ylabel(f"({unit})")
-        plt.ydigits(2)
         self.query_one("#precip-amount-plot", PlotextPlot).refresh()
 
     def _draw_humidity(self, x, hourly, n, xt_pos, xt_lbl):
@@ -123,7 +120,6 @@ class ForecastGraphs(Widget):
         plt.ylim(0, 100)
         plt.title("Humidity %")
         plt.ylabel("%")
-        plt.ydigits(0)
         plt.yfrequency(11)
         self.query_one("#humidity-plot", PlotextPlot).refresh()
 
@@ -140,7 +136,6 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Snowfall ({unit})")
         plt.ylabel(f"({unit})")
-        plt.ydigits(2)
         self.query_one("#snow-plot", PlotextPlot).refresh()
 
     def _draw_wind(self, x, hourly, n, xt_pos, xt_lbl, unit):
@@ -153,7 +148,6 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Wind Speed ({unit})")
         plt.ylabel(f"({unit})")
-        plt.ydigits(0)
         self.query_one("#wind-plot", PlotextPlot).refresh()
 
     def _draw_cloud(self, x, hourly, n, xt_pos, xt_lbl):
@@ -165,6 +159,5 @@ class ForecastGraphs(Widget):
         plt.ylim(0, 100)
         plt.title("Cloud Cover %")
         plt.ylabel("%")
-        plt.ydigits(0)
         plt.yfrequency(11)
         self.query_one("#cloud-plot", PlotextPlot).refresh()
