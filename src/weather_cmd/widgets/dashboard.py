@@ -5,7 +5,7 @@ from __future__ import annotations
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
-from textual.widgets import Label, Static
+from textual.widgets import Label, Static, Markdown
 
 from weather_cmd.models import CurrentConditions, DailyForecast, NOAAAlert, WeatherData
 from weather_cmd.utils.formatting import (
@@ -25,10 +25,9 @@ class AlertBanner(Static):
         color: $text;
         text-style: bold;
         padding: 0 1;
-        display: none;
     }
-    AlertBanner.visible {
-        display: block;
+    AlertBanner.safe {
+        background: $success;
     }
     """
 
@@ -37,9 +36,10 @@ class AlertBanner(Static):
             events = ", ".join(a.event for a in alerts[:3])
             suffix = f" (+{len(alerts) - 3} more)" if len(alerts) > 3 else ""
             self.update(f"\u26a0 ACTIVE ALERTS: {events}{suffix}")
-            self.add_class("visible")
+            self.remove_class("safe")
         else:
-            self.remove_class("visible")
+            self.update("\u2713 No hazardous warnings active")
+            self.add_class("safe")
 
 
 class Dashboard(Widget):
@@ -61,6 +61,8 @@ class Dashboard(Widget):
                 yield Label("", id="detail-high-low")
                 yield Label("", id="detail-sunrise")
                 yield Label("", id="detail-sunset")
+        yield Label("Daily Forecast:", id="forecast-label")
+        yield Static("", id="text-forecast")
 
     def update_data(self, data: WeatherData, units: str = "imperial") -> None:
         cur = data.current
@@ -94,3 +96,9 @@ class Dashboard(Widget):
                 self.query_one("#detail-sunrise", Label).update(f"Sunrise: {daily.sunrise[0][-5:]}")
             if daily.sunset:
                 self.query_one("#detail-sunset", Label).update(f"Sunset: {daily.sunset[0][-5:]}")
+
+        # Update text forecast
+        if data.text_forecast:
+            self.query_one("#text-forecast", Static).update(data.text_forecast)
+        else:
+            self.query_one("#text-forecast", Static).update("(No text forecast available)")

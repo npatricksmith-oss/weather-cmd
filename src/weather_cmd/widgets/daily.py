@@ -5,11 +5,11 @@ from __future__ import annotations
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
 from textual.widget import Widget
-from textual.widgets import DataTable
+from textual.widgets import DataTable, Label, Static
 from textual_plotext import PlotextPlot
 
-from weather_cmd.models import DailyForecast
-from weather_cmd.utils.formatting import fmt_precip, fmt_snow, fmt_temp, fmt_uv
+from weather_cmd.models import DailyForecast, WeatherData
+from weather_cmd.utils.formatting import fmt_percent, fmt_precip, fmt_snow, fmt_temp
 from weather_cmd.utils.weather_codes import get_weather_description, get_weather_emoji
 
 
@@ -19,12 +19,15 @@ class DailyView(Widget):
             yield DataTable(id="daily-table")
             yield PlotextPlot(id="weekly-temp-plot")
             yield PlotextPlot(id="weekly-precip-plot")
+            yield Label("7-Day Forecast:", id="forecast-label")
+            yield Static("", id="text-forecast-7day")
 
     def on_mount(self) -> None:
         table = self.query_one("#daily-table", DataTable)
-        table.add_columns("Day", "", "Condition", "High", "Low", "Precip", "Snow", "UV")
+        table.add_columns("Day", "", "Condition", "High", "Low", "Precip", "Snow", "Precip %")
 
-    def update_data(self, daily: DailyForecast, units: str = "imperial") -> None:
+    def update_data(self, data: WeatherData, units: str = "imperial") -> None:
+        daily = data.daily
         table = self.query_one("#daily-table", DataTable)
         table.clear()
 
@@ -39,11 +42,17 @@ class DailyView(Widget):
             low = fmt_temp(daily.temp_min[i], units) if i < len(daily.temp_min) else "-"
             precip = fmt_precip(daily.precipitation_sum[i], units) if i < len(daily.precipitation_sum) else "-"
             snow = fmt_snow(daily.snowfall_sum[i], units) if i < len(daily.snowfall_sum) else "-"
-            uv = fmt_uv(daily.uv_index_max[i]) if i < len(daily.uv_index_max) else "-"
-            table.add_row(day_name, emoji, desc, high, low, precip, snow, uv)
+            precip_prob = fmt_percent(daily.precipitation_probability_max[i]) if i < len(daily.precipitation_probability_max) else "-"
+            table.add_row(day_name, emoji, desc, high, low, precip, snow, precip_prob)
 
         self._draw_weekly_temp(day_labels, daily, units)
         self._draw_weekly_precip(day_labels, daily, units)
+
+        # Update 7-day text forecast if available
+        if data.text_forecast:
+            self.query_one("#text-forecast-7day", Static).update(data.text_forecast)
+        else:
+            self.query_one("#text-forecast-7day", Static).update("(No extended forecast available)")
 
     def _draw_weekly_temp(self, labels: list[str], daily: DailyForecast, units: str) -> None:
         plt = self.query_one("#weekly-temp-plot", PlotextPlot).plt
@@ -64,8 +73,19 @@ class DailyView(Widget):
         plt = self.query_one("#weekly-precip-plot", PlotextPlot).plt
         plt.clf()
         x = list(range(len(labels)))
-        plt.bar(x, daily.precipitation_sum[: len(x)], color="blue", width=0.6)
+
+        # Convert to inches for imperial units
+        precip_data = daily.precipitation_sum[: len(x)]
+        if units == "imperial":
+            precip_data = [p / 25.4 for p in precip_data]  # mm to inches
+            unit_label = "in"
+            title = "Weekly Precipitation (in)"
+        else:
+            unit_label = "mm"
+            title = "Weekly Precipitation (mm)"
+
+        plt.bar(x, precip_data, color="blue", width=0.6)
         plt.xticks(x, labels)
-        plt.title("Weekly Precipitation (mm)")
-        plt.ylabel("mm")
+        plt.title(title)
+        plt.ylabel(unit_label)
         self.query_one("#weekly-precip-plot", PlotextPlot).refresh()
