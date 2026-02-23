@@ -1,0 +1,135 @@
+Screen {
+    layout: vertical;
+}
+
+#header-bar {
+    height: 1;
+    background: $primary;
+    color: $text;
+    text-style: bold;
+    padding: 0 1;
+}
+
+LoadingIndicator {
+    height: 3;
+}
+
+TabbedContent {
+    height: 1fr;
+}
+
+/* Graphs tab */
+ForecastGraphs {
+    height: 1fr;
+}
+
+ForecastGraphs #range-label {
+    height: 1;
+    background: $surface;
+    color: $text-muted;
+    text-style: italic;
+}
+
+ForecastGraphs PlotextPlot {
+    height: 14;
+    margin: 0 1;
+}
+
+/* Dashboard */
+Dashboard {
+    height: 1fr;
+    padding: 1;
+}
+
+#dashboard-main {
+    height: auto;
+}
+
+#current-hero {
+    width: 1fr;
+    min-width: 20;
+    padding: 1 2;
+    border: round $primary;
+}
+
+#hero-emoji {
+    text-style: bold;
+    text-align: center;
+}
+
+#hero-desc {
+    text-align: center;
+    color: $text-muted;
+}
+
+#hero-temp {
+    text-align: center;
+    text-style: bold;
+}
+
+#hero-feels {
+    text-align: center;
+    color: $text-muted;
+}
+
+#current-details {
+    width: 1fr;
+    padding: 1 2;
+    border: round $secondary;
+}
+
+#current-today {
+    width: 1fr;
+    padding: 1 2;
+    border: round $secondary;
+}
+
+/* Daily view */
+DailyView {
+    height: 1fr;
+}
+
+DailyView DataTable {
+    height: auto;
+    max-height: 12;
+    margin: 0 1;
+}
+
+DailyView PlotextPlot {
+    height: 14;
+    margin: 0 1;
+}
+
+/* Radar */
+RadarView {
+    height: 1fr;
+    padding: 1;
+}
+
+#radar-title {
+    text-style: bold;
+    padding: 0 1;
+}
+
+#radar-content {
+    height: 1fr;
+}
+
+#radar-image {
+    height: 1fr;
+}
+
+/* Alerts */
+AlertsView {
+    height: 1fr;
+    padding: 1;
+}
+
+#alerts-title {
+    text-style: bold;
+    padding: 0 1;
+}
+
+#alerts-log {
+    height: 1fr;
+}
