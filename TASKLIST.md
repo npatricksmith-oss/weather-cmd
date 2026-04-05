@@ -1,5 +1,5 @@
 # Overall
-- [ ] Allow selecting of location by Zip Code
+- [x] Allow selecting of location by Zip Code
 
 # Graphs
 - [x] Remove decimals from Temp, and wind speed graphs
@@ -24,6 +24,5 @@
 
 # 7-Day Forecast
 - [ ] 7-day text forecast from NOAA.gov - already implemented
-
 
 
