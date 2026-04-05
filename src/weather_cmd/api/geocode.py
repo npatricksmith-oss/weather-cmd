@@ -29,7 +29,10 @@ async def geocode_city(city: str, client: httpx.AsyncClient) -> Location:
 
 
 async def geocode_zipcode(zipcode: str, client: httpx.AsyncClient) -> Location:
-    resp = await client.get(GEOCODING_URL, params={"postal_code": zipcode, "count": 1, "language": "en"})
+    resp = await client.get(
+        GEOCODING_URL,
+        params={"name": zipcode, "count": 1, "language": "en"},
+    )
     resp.raise_for_status()
     data = resp.json()
     results = data.get("results")

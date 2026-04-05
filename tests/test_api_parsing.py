@@ -4,7 +4,7 @@ import httpx
 import pytest
 import respx
 
-from weather_cmd.api.geocode import geocode_city
+from weather_cmd.api.geocode import geocode_city, geocode_zipcode
 from weather_cmd.api.noaa import fetch_alerts
 from weather_cmd.api.openmeteo import fetch_forecast
 
@@ -49,6 +49,33 @@ async def test_geocode_city_not_found():
     async with httpx.AsyncClient() as client:
         with pytest.raises(ValueError, match="Could not find"):
             await geocode_city("xyznonexistent", client)
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_geocode_zipcode():
+    route = respx.get("https://geocoding-api.open-meteo.com/v1/search").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "name": "New York",
+                        "latitude": 40.7506,
+                        "longitude": -73.9972,
+                        "country": "United States",
+                        "admin1": "New York",
+                    }
+                ]
+            },
+        )
+    )
+    async with httpx.AsyncClient() as client:
+        loc = await geocode_zipcode("10001", client)
+    assert route.calls.last.request.url.params["name"] == "10001"
+    assert loc.name == "New York"
+    assert loc.admin1 == "New York"
+    assert abs(loc.latitude - 40.7506) < 0.01
 
 
 @respx.mock
