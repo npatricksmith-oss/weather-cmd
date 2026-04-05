@@ -43,13 +43,6 @@ Dashboard {
 
 #dashboard-main {
     height: auto;
-    max-height: 12;
-    margin-bottom: 1;
-}
-
-#text-forecast {
-    height: auto;
-    max-height: 10;
 }
 
 #current-hero {
@@ -107,9 +100,15 @@ DailyView PlotextPlot {
     margin: 0 1;
 }
 
-#text-forecast {
+#detailed-label {
+    text-style: bold;
+    padding: 1 1 0 1;
+    color: $accent;
+}
+
+#detailed-forecast {
     height: auto;
-    padding: 1 0 0 0;
+    padding: 0 1;
     color: $text;
 }
 
@@ -124,12 +123,11 @@ RadarView {
     padding: 0 1;
 }
 
-#radar-image {
+#radar-content {
     height: 1fr;
-    width: 1fr;
 }
 
-#radar-placeholder {
+#radar-image {
     height: 1fr;
 }
 

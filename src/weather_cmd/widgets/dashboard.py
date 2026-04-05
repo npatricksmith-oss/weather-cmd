@@ -5,7 +5,7 @@ from __future__ import annotations
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widget import Widget
-from textual.widgets import Label, Static
+from textual.widgets import Label, Static, Markdown
 
 from weather_cmd.models import CurrentConditions, DailyForecast, NOAAAlert, WeatherData
 from weather_cmd.utils.formatting import (
@@ -62,6 +62,7 @@ class Dashboard(Widget):
                 yield Label("", id="detail-sunrise")
                 yield Label("", id="detail-sunset")
                 yield Label("", id="detail-county")
+        yield Label("Daily Forecast:", id="forecast-label")
         yield Static("", id="text-forecast")
 
     def update_data(self, data: WeatherData, units: str = "imperial") -> None:

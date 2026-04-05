@@ -31,7 +31,7 @@ class WeatherApp(App):
 
     BINDINGS = [
         Binding("1", "tab('graphs')", "Graphs", show=True),
-        Binding("2", "tab('dashboard')", "Daily", show=True),
+        Binding("2", "tab('dashboard')", "Dashboard", show=True),
         Binding("3", "tab('daily')", "7-Day", show=True),
         Binding("4", "tab('radar')", "Radar", show=True),
         Binding("5", "tab('alerts')", "Alerts", show=True),
@@ -64,7 +64,7 @@ class WeatherApp(App):
         with TabbedContent(id="tabs"):
             with TabPane("Graphs", id="graphs"):
                 yield ForecastGraphs()
-            with TabPane("Daily", id="dashboard"):
+            with TabPane("Dashboard", id="dashboard"):
                 yield Dashboard()
             with TabPane("7-Day", id="daily"):
                 yield DailyView()

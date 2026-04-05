@@ -29,26 +29,12 @@ async def geocode_city(city: str, client: httpx.AsyncClient) -> Location:
 
 
 async def geocode_zipcode(zipcode: str, client: httpx.AsyncClient) -> Location:
-    # Request multiple results to handle postal codes that exist in multiple countries
-    resp = await client.get(GEOCODING_URL, params={"name": zipcode, "count": 10, "language": "en"})
+    resp = await client.get(GEOCODING_URL, params={"postal_code": zipcode, "count": 1, "language": "en"})
     resp.raise_for_status()
     data = resp.json()
     results = data.get("results")
     if not results:
         raise ValueError(f"Could not find location: {zipcode}")
-
-    # Prefer US results for zipcodes
-    for r in results:
-        if r.get("country_code") == "US":
-            return Location(
-                name=r["name"],
-                latitude=r["latitude"],
-                longitude=r["longitude"],
-                country=r.get("country", ""),
-                admin1=r.get("admin1", ""),
-            )
-
-    # Fall back to first result if no US match found
     r = results[0]
     return Location(
         name=r["name"],

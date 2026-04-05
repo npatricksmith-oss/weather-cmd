@@ -81,17 +81,12 @@ class ForecastGraphs(Widget):
         plt.xticks(xt_pos, xt_lbl)
         plt.title(f"Temperature ({unit})")
         plt.ylabel(f"({unit})")
-        # Set y-axis ticks with integer formatting and padding for legend
+        # Set y-axis ticks with integer formatting
         all_temps = temp_rounded + feels_rounded
         if all_temps:
             ymin, ymax = int(min(all_temps)), int(max(all_temps))
-            temp_range = ymax - ymin
-            # Add 30% padding at the top for legend space
-            padding = max(2, int(temp_range * 0.3))
-            ymax_padded = ymax + padding
-            step = max(1, temp_range // 5)
+            step = max(1, (ymax - ymin) // 5)
             yticks = list(range(ymin, ymax + 1, step))
-            plt.ylim(ymin, ymax_padded)
             plt.yticks(yticks, [str(int(y)) for y in yticks])
         self.query_one("#temp-plot", PlotextPlot).refresh()
 
