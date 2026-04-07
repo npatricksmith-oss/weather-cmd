@@ -5,7 +5,7 @@ import pytest
 import respx
 
 from weather_cmd.api.geocode import geocode_city, geocode_zipcode
-from weather_cmd.api.noaa import fetch_alerts
+from weather_cmd.api.noaa import fetch_alerts, fetch_forecast_fallback
 from weather_cmd.api.openmeteo import fetch_forecast
 
 
@@ -54,7 +54,10 @@ async def test_geocode_city_not_found():
 @respx.mock
 @pytest.mark.asyncio
 async def test_geocode_zipcode():
-    route = respx.get("https://geocoding-api.open-meteo.com/v1/search").mock(
+    route = respx.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": "10001", "count": "3", "language": "en", "countryCode": "US"},
+    ).mock(
         return_value=httpx.Response(
             200,
             json={
@@ -72,10 +75,116 @@ async def test_geocode_zipcode():
     )
     async with httpx.AsyncClient() as client:
         loc = await geocode_zipcode("10001", client)
-    assert route.calls.last.request.url.params["name"] == "10001"
+    assert route.called
     assert loc.name == "New York"
     assert loc.admin1 == "New York"
     assert abs(loc.latitude - 40.7506) < 0.01
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_geocode_zipcode_falls_back_without_us_match():
+    us_route = respx.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": "75001", "count": "3", "language": "en", "countryCode": "US"},
+    ).mock(return_value=httpx.Response(200, json={}))
+    fallback_route = respx.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": "75001", "count": "1", "language": "en"},
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "name": "Paris",
+                        "latitude": 48.8647,
+                        "longitude": 2.3314,
+                        "country": "France",
+                        "admin1": "Ile-de-France",
+                    }
+                ]
+            },
+        )
+    )
+
+    async with httpx.AsyncClient() as client:
+        loc = await geocode_zipcode("75001", client)
+
+    assert us_route.called
+    assert fallback_route.called
+    assert loc.name == "Paris"
+    assert loc.country == "France"
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_geocode_zipcode_normalizes_zip_plus_four():
+    route = respx.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": "10001", "count": "3", "language": "en", "countryCode": "US"},
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "name": "New York",
+                        "latitude": 40.7506,
+                        "longitude": -73.9972,
+                        "country": "United States",
+                        "admin1": "New York",
+                    }
+                ]
+            },
+        )
+    )
+
+    async with httpx.AsyncClient() as client:
+        loc = await geocode_zipcode("10001-1234", client)
+
+    assert route.called
+    assert loc.name == "New York"
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_geocode_zipcode_prefers_exact_us_postcode_match():
+    route = respx.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": "13114", "count": "3", "language": "en", "countryCode": "US"},
+    ).mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "name": "Wrong Match",
+                        "latitude": 42.0,
+                        "longitude": -75.0,
+                        "country": "United States",
+                        "admin1": "New York",
+                        "postcodes": ["13115"],
+                    },
+                    {
+                        "name": "Mexico",
+                        "latitude": 43.45951,
+                        "longitude": -76.22882,
+                        "country": "United States",
+                        "admin1": "New York",
+                        "postcodes": ["13114"],
+                    },
+                ]
+            },
+        )
+    )
+
+    async with httpx.AsyncClient() as client:
+        loc = await geocode_zipcode("13114", client)
+
+    assert route.called
+    assert loc.name == "Mexico"
+    assert loc.admin1 == "New York"
 
 
 @respx.mock
@@ -178,3 +287,101 @@ async def test_fetch_alerts_with_data():
     assert len(alerts) == 1
     assert alerts[0].event == "Winter Storm Warning"
     assert alerts[0].severity == "Severe"
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_fetch_forecast_fallback_from_noaa():
+    respx.get("https://api.weather.gov/points/43.4595,-76.2288").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "properties": {
+                    "forecast": "https://api.weather.gov/gridpoints/BUF/121,85/forecast",
+                    "forecastHourly": "https://api.weather.gov/gridpoints/BUF/121,85/forecast/hourly",
+                }
+            },
+        )
+    )
+    respx.get("https://api.weather.gov/gridpoints/BUF/121,85/forecast/hourly").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "properties": {
+                    "periods": [
+                        {
+                            "startTime": "2026-04-07T01:00:00-04:00",
+                            "temperature": 32,
+                            "temperatureUnit": "F",
+                            "probabilityOfPrecipitation": {"value": 30},
+                            "relativeHumidity": {"value": 78},
+                            "windSpeed": "3 mph",
+                            "windDirection": "S",
+                            "shortForecast": "Chance Snow Showers",
+                            "isDaytime": False,
+                        },
+                        {
+                            "startTime": "2026-04-07T02:00:00-04:00",
+                            "temperature": 31,
+                            "temperatureUnit": "F",
+                            "probabilityOfPrecipitation": {"value": 20},
+                            "relativeHumidity": {"value": 80},
+                            "windSpeed": "4 mph",
+                            "windDirection": "SW",
+                            "shortForecast": "Mostly Cloudy",
+                            "isDaytime": False,
+                        },
+                    ]
+                }
+            },
+        )
+    )
+    respx.get("https://api.weather.gov/gridpoints/BUF/121,85/forecast").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "properties": {
+                    "periods": [
+                        {
+                            "startTime": "2026-04-07T06:00:00-04:00",
+                            "temperature": 40,
+                            "temperatureUnit": "F",
+                            "probabilityOfPrecipitation": {"value": 50},
+                            "shortForecast": "Partly Sunny",
+                            "isDaytime": True,
+                        },
+                        {
+                            "startTime": "2026-04-07T18:00:00-04:00",
+                            "temperature": 28,
+                            "temperatureUnit": "F",
+                            "probabilityOfPrecipitation": {"value": 10},
+                            "shortForecast": "Mostly Clear",
+                            "isDaytime": False,
+                        },
+                        {
+                            "startTime": "2026-04-08T06:00:00-04:00",
+                            "temperature": 42,
+                            "temperatureUnit": "F",
+                            "probabilityOfPrecipitation": {"value": 20},
+                            "shortForecast": "Rain Showers",
+                            "isDaytime": True,
+                        },
+                    ]
+                }
+            },
+        )
+    )
+
+    async with httpx.AsyncClient() as client:
+        current, hourly, daily = await fetch_forecast_fallback(43.4595, -76.2288, client)
+
+    assert current.temperature == 32
+    assert current.humidity == 78
+    assert current.weather_code == 71
+    assert len(hourly.times) == 2
+    assert hourly.wind_speed[1] == 4
+    assert len(daily.dates) == 2
+    assert daily.temp_max[0] == 40
+    assert daily.temp_min[0] == 28
+    assert daily.weather_code[0] == 2
+    assert daily.weather_code[1] == 61

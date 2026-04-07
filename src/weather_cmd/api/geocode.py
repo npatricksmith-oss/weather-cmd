@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import httpx
 
 from weather_cmd.models import Location
@@ -29,15 +31,40 @@ async def geocode_city(city: str, client: httpx.AsyncClient) -> Location:
 
 
 async def geocode_zipcode(zipcode: str, client: httpx.AsyncClient) -> Location:
-    resp = await client.get(
-        GEOCODING_URL,
-        params={"name": zipcode, "count": 1, "language": "en"},
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    results = data.get("results")
+    normalized = zipcode.strip()
+    match = re.fullmatch(r"(\d{5})(?:-\d{4})?", normalized)
+
+    params = {"name": normalized, "count": 1, "language": "en"}
+    if match:
+        normalized_zip = match.group(1)
+        # Prefer US matches for ZIP-style input while keeping a fallback for
+        # non-US postal codes that happen to be numeric.
+        us_params = {**params, "name": normalized_zip, "count": 3, "countryCode": "US"}
+        resp = await client.get(GEOCODING_URL, params=us_params)
+        resp.raise_for_status()
+        data = resp.json()
+        results = data.get("results")
+        if not results:
+            params["name"] = normalized_zip
+            resp = await client.get(GEOCODING_URL, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            results = data.get("results")
+        else:
+            results = [
+                result
+                for result in results
+                if normalized_zip in result.get("postcodes", [])
+            ] or results
+    else:
+        resp = await client.get(GEOCODING_URL, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        results = data.get("results")
+
     if not results:
         raise ValueError(f"Could not find location: {zipcode}")
+
     r = results[0]
     return Location(
         name=r["name"],
