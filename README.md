@@ -2,6 +2,129 @@
 
 Terminal weather app with forecast graphs, radar, alerts, and ZIP/city/location lookup.
 
+## Requirements
+
+- Python 3.12 or newer
+- Internet access for forecast, alerts, geocoding, and radar data
+- A terminal that can run Textual apps
+
+No API key is required for the current providers.
+
+## Python Dependencies
+
+Runtime dependencies:
+
+- `textual`
+- `textual-plotext`
+- `textual-image`
+- `httpx`
+- `pillow`
+
+Development/test dependencies:
+
+- `pytest`
+- `pytest-asyncio`
+- `respx`
+
+These are installed automatically from `pyproject.toml`.
+
+## Install
+
+From a fresh clone:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e '.[dev]'
+```
+
+If you only want to run the app and do not need test tooling:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+You can also skip the manual setup and use the repo-local launcher:
+
+```bash
+./weather-cmd --city Boston
+```
+
+On first run it creates `.venv/`, installs the app, and then launches it.
+
+## Run
+
+After installation:
+
+```bash
+weather-cmd --city Boston
+```
+
+Other examples:
+
+```bash
+weather-cmd --zipcode 10001
+weather-cmd --location 42.3601,-71.0589
+weather-cmd --city Boston --units metric
+weather-cmd --city Boston --save-location
+```
+
+If you do not want to activate the virtual environment, run the console script directly:
+
+```bash
+.venv/bin/weather-cmd --city Boston
+```
+
+From the repo root, this wrapper works too:
+
+```bash
+./weather-cmd --city Boston
+```
+
+## Verify The Install
+
+Check the CLI wiring:
+
+```bash
+weather-cmd --help
+```
+
+Run tests:
+
+```bash
+pytest -q
+```
+
+## Troubleshooting
+
+### `No module named weather_cmd`
+
+The package has not been installed into your environment yet. Create a virtual environment and run:
+
+```bash
+pip install -e .
+```
+
+### `No module named httpx` or other missing package errors
+
+The dependencies are not installed in the Python environment you are using. Activate the project virtual environment or use the binary inside `.venv/bin/`.
+
+### `git pull` did not install anything
+
+`git pull` only downloads committed files from the repository. It does not create `.venv/` or install Python packages. You must run the install commands above after pulling changes that affect dependencies or packaging.
+
+### I want one command from the repo root
+
+Use:
+
+```bash
+./weather-cmd --city Boston
+```
+
+That wrapper creates `.venv/` and installs the package automatically if needed.
+
 ## Status
 
 Current forecast stack:

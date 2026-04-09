@@ -43,3 +43,6 @@ dmypy.json
 
 # Textual
 .textual.log
+
+# Keep the repo-local launcher tracked.
+!/weather-cmd
